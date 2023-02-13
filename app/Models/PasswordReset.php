@@ -37,6 +37,9 @@ class PasswordReset extends Model
      */
     const UPDATED_AT = null;
 
+    /**
+     * @return HasOne
+     */
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'email', 'email');
