@@ -9,4 +9,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// require __DIR__ . '/controller/base.php';
+require __DIR__ . '/api/auth.php';

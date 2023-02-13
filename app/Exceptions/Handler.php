@@ -8,6 +8,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Laravel\Octane\Exceptions\DdException;
 
 class Handler extends ExceptionHandler
 {
@@ -68,7 +69,7 @@ class Handler extends ExceptionHandler
                 $e instanceof AuthenticationException => $e = new \App\Exceptions\AuthenticationException($e->getMessage()),
                 $e instanceof NotFoundHttpException => $e = new NotFoundException($e->getMessage()),
                 $e instanceof ThrottleRequestsException => $e = new TooManyAttempsException($e->getMessage()),
-                default => $e = new UnkownException($e->getMessage()),
+                default => true,
             };
         }
 
