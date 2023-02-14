@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         $device = $input['device_name'] ?? $request->userAgent(); // Create a custom device name
         $expiredTime = Carbon::now()->addMinutes(config('sanctum.expiration'));
-        $abilities = ['*'];
+        $abilities = $user->permissions;
 
         $token = $user->createToken($device, $abilities, $expiredTime)->plainTextToken;
 

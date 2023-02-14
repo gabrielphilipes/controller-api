@@ -2,20 +2,22 @@
 
 namespace App\Exceptions;
 
+use Throwable;
+use Illuminate\Http\Request;
 use Illuminate\Auth\AuthenticationException;
+use Symfony\Component\HttpFoundation\Response;
+use Laravel\Sanctum\Exceptions\MissingAbilityException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Throwable;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Laravel\Octane\Exceptions\DdException;
 
 class Handler extends ExceptionHandler
 {
     /**
      * A list of exception types with their corresponding custom log levels.
      *
-     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     * @var array<class-string<Throwable>, \Psr\Log\LogLevel::*>
      */
     protected $levels = [
         //
@@ -24,7 +26,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array<int, class-string<\Throwable>>
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -55,20 +57,21 @@ class Handler extends ExceptionHandler
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $e
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param  Request  $request
+     * @param Throwable $e
+     * @return Response
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
-    public function render($request, Throwable $e)
+    public function render($request, Throwable $e): Response
     {
         if ($request->wantsJson()) {
             match (true) {
-                $e instanceof ModelNotFoundException => $e = new ModelNotFoundException($e->getMessage()),
-                $e instanceof AuthenticationException => $e = new \App\Exceptions\AuthenticationException($e->getMessage()),
                 $e instanceof NotFoundHttpException => $e = new NotFoundException($e->getMessage()),
+                $e instanceof ModelNotFoundException => $e = new \App\Exceptions\ModelNotFoundException($e->getMessage()),
                 $e instanceof ThrottleRequestsException => $e = new TooManyAttempsException($e->getMessage()),
+                $e instanceof MissingAbilityException => $e = new InsufficientPermissionsExpcetion($e->getMessage()),
+                $e instanceof AuthenticationException => $e = new \App\Exceptions\AuthenticationException($e->getMessage()),
                 default => true,
             };
         }
