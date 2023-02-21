@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('document');
+            $table->string('timezone')->default(config('app.timezone'));
+            $table->string('language')->default(config('app.locale'));
             $table->timestamps();
             $table->softDeletes();
         });

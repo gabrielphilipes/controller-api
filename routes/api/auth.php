@@ -13,6 +13,5 @@ Route::group(['prefix' => 'auth'], function () {
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('increase-token-lifetime', [AuthController::class, 'increaseTokenLifetime']);
-        Route::get('me', [AuthController::class, 'me']);
     });
 });

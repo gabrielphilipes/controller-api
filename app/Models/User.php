@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Scopes\BusinessScope;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory;
+    use HasApiTokens, HasFactory, SoftDeletes;
 
     public static function boot(): void
     {
@@ -48,8 +48,10 @@ class User extends Authenticatable
         'business_id',
         'name',
         'email',
+        'status',
         'password',
-        'permissions'
+        'permissions',
+        'timezone'
     ];
 
     /**

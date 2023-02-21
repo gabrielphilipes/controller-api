@@ -18,18 +18,29 @@ class UserResource extends JsonResource
             $isAdmin = $this->isAdmin();
         }
 
+        $myPermission = auth()->user()->id === $this->id;
+
         $with = $request->get('with') ?? '';
         $with = explode(',', $with);
+
+        $ignoreInAuthRequests = stripos($request->getRequestUri(), 'auth') !== false;
 
         return [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            $this->mergeWhen($isAdmin, [
-                'permissions' => $this->permissions,
+            'status' => $this->status,
+            'timezone' => $this->timezone ?? $this->business->timezone ?? config('app.timezone'),
+            'language' => $this->language ?? config('app.locale'),
+            $this->mergeWhen($isAdmin || $myPermission, [
+                $this->mergeWhen(!$ignoreInAuthRequests, [
+                    'permissions' => $this->permissions,
+                ]),
+                'created_at' => $this->created_at,
+                'updated_at' => $this->updated_at,
             ]),
-            $this->mergeWhen(in_array('business', $with), [
-                'business' => BusinessResource::make($this->business)
+            $this->mergeWhen(in_array('business', $with) && !$ignoreInAuthRequests, [
+                'business' => BusinessResource::make($this->business),
             ]),
         ];
     }

@@ -34,7 +34,9 @@ class BusinessResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'document' => $document
+            'document' => $document,
+            'timezone' => $this->timezone,
+            'language' => $this->language,
         ];
     }
 }

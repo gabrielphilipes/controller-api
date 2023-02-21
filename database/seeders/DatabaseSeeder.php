@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
         $business = \App\Models\Business::create([
             'name' => 'Default Business',
             'document' => '123456789',
+            'timezone' => config('app.timezone'),
+            'language' => config('app.locale'),
         ]);
 
          \App\Models\User::create([

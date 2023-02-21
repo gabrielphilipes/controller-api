@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\NotFoundException;
 use App\Exceptions\TokenExpiredException;
+use App\Http\Resources\LoginResource;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Exceptions\LogoutException;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\LoginAuthRequest;
 use App\Exceptions\LoginInvalidException;
@@ -41,12 +43,7 @@ class AuthController extends Controller
         return UserResource::make($user);
     }
 
-    /**
-     * @param LoginAuthRequest $request
-     * @return UserResource
-     * @throws LoginInvalidException
-     */
-    public function login(LoginAuthRequest $request): UserResource
+    public function login(LoginAuthRequest $request)
     {
         $input = $request->validated();
 
@@ -64,16 +61,16 @@ class AuthController extends Controller
         $user->tokens()->delete();
 
         $device = $input['device_name'] ?? $request->userAgent(); // Create a custom device name
-        $expiredTime = Carbon::now()->addMinutes(config('sanctum.expiration'));
+        $expiredTime = Carbon::now($user->timezone)->addMinutes(config('sanctum.expiration'));
         $abilities = $user->permissions;
 
-        $token = $user->createToken($device, $abilities, $expiredTime)->plainTextToken;
+        auth()->setUser($user);
 
-        return UserResource::make($user)->additional([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'expired_at' => $expiredTime->toDateTimeString(),
-        ]);
+        $token = $user->createToken($device, $abilities, $expiredTime);
+        $token->accessToken->user = $user;
+        $token->accessToken->plainTextToken = $token->plainTextToken;
+
+        return LoginResource::make($token->accessToken);
     }
 
     /**
@@ -93,24 +90,19 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * @return JsonResponse
-     */
-    public function increaseTokenLifetime(): JsonResponse
+    public function increaseTokenLifetime()
     {
         try {
             /** @var User $user */
             $user = auth()->user();
 
             $token = $user->currentAccessToken();
-            $token->expires_at = Carbon::now()->addMinutes(config('sanctum.expiration'));
+            $token->expires_at = Carbon::now($user->timezone)->addMinutes(config('sanctum.expiration'));
             $token->save();
 
-            return response()->json([
-                'access_token' => request()->bearerToken(),
-                'token_type' => 'Bearer',
-                'expired_at' => $token->expires_at->toDateTimeString(),
-            ]);
+            $token->user = $user;
+
+            return LoginResource::make($token);
         } catch (Throwable $th) {
             return response()->json([
                 'error'   => 'IncreaseLifeTimeError',
@@ -221,16 +213,5 @@ class AuthController extends Controller
             'error' => null,
             'message' => 'Password has been changed successfully!',
         ]);
-    }
-
-    /**
-     * @return UserResource
-     */
-    public function me(): UserResource
-    {
-        /** @var User $user */
-        $user = auth()->user();
-
-        return UserResource::make($user);
     }
 }

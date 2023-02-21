@@ -1,17 +1,23 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\DebugController;
 
-Route::get('/version', fn() => ['version' => '1.0.0']);
+Route::get('/version', fn () => ['version' => '1.0.0']);
+Route::middleware('auth:sanctum')->match(['get', 'post'], '/debug', [DebugController::class, 'debug']);
 
-/**
- * USER
- * Manager users
- */
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::get('users/me', [\App\Http\Controllers\AuthController::class, 'me']);
-    Route::resource('users', \App\Http\Controllers\UserController::class);
+    /**
+     * USER
+     * Manager users
+     */
+    Route::get('users/me', [UserController::class, 'me']);
+    Route::post('users/check-email', [UserController::class, 'checkEmail']);
+    Route::post('users/multiple', [UserController::class, 'storeMultiple']);
+    Route::resource('users', UserController::class);
+
+    // ...
 });
 
 require __DIR__ . '/api/auth.php';
